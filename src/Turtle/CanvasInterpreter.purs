@@ -120,8 +120,7 @@ renderTurtleProgOnCanvas :: Canvas.Context2D -> TurtleProgram Unit -> Effect Can
 renderTurtleProgOnCanvas ctx prog =
   initCanvas ctx >>=
   moveTo' 0.0 0.0 >>=
-  -- beginStroke' >>=
-  interpretTurtleProgram prog -- (penDown *> prog *> penUp)
+  interpretTurtleProgram (penDown *> prog *> penUp)
   where
     initCanvas :: Canvas.Context2D -> Effect Canvas.Context2D
     initCanvas c = 
