@@ -1,7 +1,6 @@
 module Turtle.CanvasInterpreter where
   
 import Prelude
-
 import Control.Monad.Free (runFreeM)
 import Control.Monad.State (State, evalState, get, modify, put)
 import Data.Foldable (foldl)
@@ -20,25 +19,29 @@ interpretTurtleProgram turtleProg ctx = foldl (>>=) (pure ctx) (interpretTurtleP
 
 interpretTurtleProgram' :: forall a. TurtleProgram a -> Array (Canvas.Context2D -> Effect Canvas.Context2D)
 interpretTurtleProgram' prog = 
-  evalState turtleProgState initTurtle
+  evalState turtleProgramState initTurtle
 
-  where prog' = const [] <$> prog
-        turtleProgState = interpretTurtleProgram'' prog'
+  where 
+    prog' :: TurtleProgram (Array (Canvas.Context2D -> Effect Canvas.Context2D))
+    prog' = const [] <$> prog
+
+    turtleProgramState :: State Turtle  (Array (Canvas.Context2D -> Effect Canvas.Context2D))
+    turtleProgramState = interpretTurtleProgram'' prog'
 
 -- | A natural transformation from `TurtleProg` to `State Turtle`.
 interpretTurtleProgram'' :: TurtleProgram (Array (Canvas.Context2D -> Effect Canvas.Context2D))
                          -> State Turtle  (Array (Canvas.Context2D -> Effect Canvas.Context2D))
 interpretTurtleProgram'' = runFreeM interpret where
   interpret :: TurtleCommand (TurtleProgram (Array (Canvas.Context2D -> Effect Canvas.Context2D)))
-            -> State Turtle   (TurtleProgram (Array (Canvas.Context2D -> Effect Canvas.Context2D)))
+            -> State Turtle  (TurtleProgram (Array (Canvas.Context2D -> Effect Canvas.Context2D)))
   interpret (Forward r rest) = do
     turtle <- get 
     let x' = turtle.x + adjacent r turtle.angle
         y' = turtle.y + opposite r turtle.angle
         instr = lineTo' x' y'
-    put (turtle {x = x', y = y'})
+    put $ turtle {x = x', y = y'}
 
-    pure ((\prog -> prog <> [instr]) <$> rest)
+    pure $ (\prog -> prog <> [instr]) <$> rest
 
   interpret (Arc r arcAngleDeg rest) = do
     turtle <- get
@@ -48,8 +51,8 @@ interpretTurtleProgram'' = runFreeM interpret where
         y'       = turtle.y + opposite r angleEnd
         instr    = arc' turtle.x turtle.y r turtle.angle angleEnd
 
-    put (turtle {x = x', y = y', angle = angle'})
-    pure (rest <#> ((<>) [instr]))
+    put $ turtle {x = x', y = y', angle = angle'}
+    pure $ rest <#> ((<>) [instr])
 
   interpret (Right angleDeg rest) = do
     let angle = rad angleDeg
@@ -59,15 +62,16 @@ interpretTurtleProgram'' = runFreeM interpret where
   interpret (Left angleDeg rest) = interpret (Right (-1.0 * angleDeg) rest)
 
   interpret (PenUp rest) = do
-    _ <- modify $ \turtle -> turtle {isPenDown = false}
-    pure ((\prog -> prog <> [endStroke']) <$> rest)
+    {isPenDown} <- get
+    void $ modify $ \turtle -> turtle {isPenDown = false}
+    pure $ (\prog -> prog <> (if isPenDown then [endStroke'] else [])) <$> rest
 
   interpret (PenDown rest) = do
     {x, y} <- modify $ \turtle -> turtle {isPenDown = true}
-    pure ((\prog -> prog <> [beginStroke', moveTo' x y]) <$> rest)
+    pure $ (\prog -> prog <> [beginStroke', moveTo' x y]) <$> rest
 
   interpret (ChangeColor col rest) = do
-    pure ((\prog -> prog <> [setStrokeStyle' $ colorToCanvasStyle]) <$> rest)
+    pure $ (\prog -> prog <> [setStrokeStyle' $ colorToCanvasStyle]) <$> rest
     where
       colorToCanvasStyle :: String
       colorToCanvasStyle = case col of
@@ -116,8 +120,8 @@ renderTurtleProgOnCanvas :: Canvas.Context2D -> TurtleProgram Unit -> Effect Can
 renderTurtleProgOnCanvas ctx prog =
   initCanvas ctx >>=
   moveTo' 0.0 0.0 >>=
-  beginStroke' >>=
-  interpretTurtleProgram (penDown *> prog *> penUp)
+  -- beginStroke' >>=
+  interpretTurtleProgram prog -- (penDown *> prog *> penUp)
   where
     initCanvas :: Canvas.Context2D -> Effect Canvas.Context2D
     initCanvas c = 

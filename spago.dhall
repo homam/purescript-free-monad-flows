@@ -9,6 +9,7 @@ You can edit this file as you like.
   , "effect"
   , "free"
   , "generics-rep"
+  , "integers"
   , "math"
   , "psci-support"
   , "transformers"

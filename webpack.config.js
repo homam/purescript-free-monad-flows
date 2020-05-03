@@ -7,6 +7,9 @@ const is_production = process.env.NODE_ENV == 'production'
 const production = o => is_production ? o : null;
 const development = o => !is_production ? o : null;
 
+const isWebpackDevServer = process.argv.some(a => path.basename(a) === 'webpack-dev-server');
+const isWatch = process.argv.some(a => a === '--watch');
+
 module.exports = {
   entry: './src/index.js',
   output: {
@@ -27,7 +30,9 @@ module.exports = {
           src: [
             'src/**/*.purs'
           ],
-          pscIde: true
+          bundle: false,
+          watch: isWebpackDevServer || isWatch,
+          pscIde: false
         }
       },
       {
