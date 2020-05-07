@@ -1,9 +1,8 @@
 module Turtle.Language where
-
-import Control.Monad.Free (Free, liftF) 
-import Prelude (class Functor, class Show, Unit, unit, ($))
+import Control.Monad.Free (Free, liftF)
 import Data.Generic.Rep as Rep
 import Data.Generic.Rep.CtorShow (genericCtorShow)
+import Prelude (class Functor, class Show, Unit, unit, ($))
 
 type Angle = Number
 type Distance = Number
@@ -24,7 +23,7 @@ derive instance genericTurtleCommand :: Rep.Generic (TurtleCommand a) _
 instance showTurtleCommand :: Show (TurtleCommand a) where
   show x = genericCtorShow x
 
-type TurtleProgram = Free TurtleCommand
+type TurtleProgram a = Free TurtleCommand a
 
 forward :: Distance -> TurtleProgram Unit
 forward d = liftF $ Forward d unit
