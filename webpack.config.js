@@ -11,7 +11,7 @@ const isWebpackDevServer = process.argv.some(a => path.basename(a) === 'webpack-
 const isWatch = process.argv.some(a => a === '--watch');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, '.build'),
     filename: 'js/bundle.js'

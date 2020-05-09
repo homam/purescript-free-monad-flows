@@ -31,11 +31,11 @@ data FlowCommandsF a =
     GetPhoneNumber (PhoneNumber -> a)
   | SetPhoneNumberSubmissionStatus (RDS String PhoneNumber) a
   | ValidatePhoneNumber PhoneNumber (Either String Unit -> a)
-  | SubmitPhoneNumber PhoneNumber (Either String Unit -> a)
+  | SubmitPhoneNumber PhoneNumber (Either String PhoneNumberSubmissionResult -> a)
   | GetPinNumber (PinNumber -> a)
   | SetPinNumberSubmissionStatus (RDS String PinNumber) a
   | ValidatePinNumber PinNumber (Either String Unit -> a)
-  
+  | SubmitPinNumber PhoneNumberSubmissionResult PinNumber (Either String Unit -> a)
 
 derive instance functorTeletypeF :: Functor FlowCommandsF
 
@@ -50,7 +50,7 @@ setPhoneNumberSubmissionStatus e = liftF $ SetPhoneNumberSubmissionStatus e unit
 validatePhoneNumber :: PhoneNumber -> FlowCommands (Either String Unit)
 validatePhoneNumber phone = liftF $ ValidatePhoneNumber phone identity
 
-submitPhoneNumber :: PhoneNumber -> FlowCommands (Either String Unit)
+submitPhoneNumber :: PhoneNumber -> FlowCommands (Either String PhoneNumberSubmissionResult)
 submitPhoneNumber phone = liftF $ SubmitPhoneNumber phone identity
 
 
@@ -62,3 +62,6 @@ setPinNumberSubmissionStatus e = liftF $ SetPinNumberSubmissionStatus e unit
 
 validatePinNumber :: PinNumber -> FlowCommands (Either String Unit)
 validatePinNumber pin = liftF $ ValidatePinNumber pin identity
+
+submitPinNumber :: PhoneNumberSubmissionResult -> PinNumber -> FlowCommands (Either String Unit)
+submitPinNumber sub phone = liftF $ SubmitPinNumber sub phone identity

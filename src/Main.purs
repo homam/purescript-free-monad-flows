@@ -36,19 +36,25 @@ flowCommandsN _ (ValidatePhoneNumber v k) = k <$> do
     pure $ Left "Phone number must have exactly 8 digits"
   else
     pure $ Right unit
-flowCommandsN _ (SubmitPhoneNumber v k) = k <$> do 
+flowCommandsN _ (SubmitPhoneNumber phone k) = k <$> do 
   delay (Milliseconds 1000.0)
-  let indexOf0 = fromMaybe (-1) (String.indexOf (String.Pattern "0") v ) 
+  let indexOf0 = fromMaybe (-1) (String.indexOf (String.Pattern "0") phone ) 
   if indexOf0 /= 0 then
-    pure $ Left $ "Server Error: " <> v <> " must start with 0."
+    pure $ Left $ "Server Error: " <> phone <> " must start with 0."
   else
-    pure $ Right unit
-flowCommandsN _ (ValidatePinNumber v k) = k <$> do
-  if String.length v < 4 then
+    pure $ Right $ PhoneNumberSubmissionResult {}
+flowCommandsN _ (ValidatePinNumber pin k) = k <$> do
+  if String.length pin < 4 then
     pure $ Left "Pin number must be greater than four digits."
   else
     pure $ Right unit
-
+flowCommandsN _ (SubmitPinNumber sub pin k) = k <$> do 
+  delay (Milliseconds 1000.0)
+  let indexOf0 = fromMaybe (-1) (String.indexOf (String.Pattern "0000") pin ) 
+  if indexOf0 /= 0 then
+    pure $ Left "Server Error: Pin is 0000"
+  else
+    pure $ Right unit
 
 run :: Config -> FlowCommands ~> Aff
 run = foldFree <<< flowCommandsN
@@ -66,6 +72,6 @@ type Config = {
 main :: Config -> Effect Unit
 main config = launchAff_ $ do
   void $ run config $ do 
-    void $ Flows.submitPhoneNumberFlow
-    Flows.getPinNumberFlow
+    phoneNumberSubmission <- Flows.submitPhoneNumberFlow
+    Flows.submitPinNumberFlow phoneNumberSubmission
   -- liftEffect $ log a
