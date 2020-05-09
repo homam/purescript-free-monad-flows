@@ -4,12 +4,15 @@ You can edit this file as you like.
 -}
 { name = "my-project"
 , dependencies =
-  [ "canvas"
+  [ "aff-promise"
+  , "argonaut-generic"
+  , "canvas"
   , "console"
   , "effect"
   , "free"
   , "generics-rep"
   , "integers"
+  , "js-timers"
   , "math"
   , "psci-support"
   , "transformers"

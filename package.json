@@ -7,6 +7,7 @@
     "start:dev": "NODE_ENV=development webpack-dev-server",
     "start": "babel-node --extensions \".ts,.js\" ./src/index.ts",
     "build": "NODE_ENV=production webpack --mode production",
+    "build-ts": "babel src --out-dir src  --extensions .ts",
     "test-r": "nodemon --exec babel-node --extensions \".ts,.js\" ./src/test.js"
   },
   "author": "",

@@ -1,14 +1,47 @@
 var Main = require('./Main.purs')
 
-var canvas = document.getElementById('turtleCanvas'),
-  context = canvas.getContext('2d');
 
-// set canvas dimensions through js; doing it by css only will stretch the drawing
-canvas.setAttribute('width', window.innerWidth);
-canvas.setAttribute('height', 400);
+Main.main({
+  uiGetPhoneNumber: () => new Promise(resolve => {
+    document.getElementById('get-mobile-number').style.display = 'block'
+    const handler = e => {
+      e.preventDefault();
+      resolve(document.getElementById('get-mobile-number-input').value)
+      document.getElementById('get-mobile-number-form').removeEventListener('submit', handler)
+    }
+    document.getElementById('get-mobile-number-form')
+      .addEventListener('submit', handler)
 
-// put origin at center
-context.translate(canvas.width / 2, canvas.height / 2);
+  })
+  , uiGetPinNumber: () => new Promise(resolve => {
+    document.getElementById('get-mobile-number').style.display = 'none'
+    document.getElementById('get-pin-number').style.display = 'block'
+    const handler = e => {
+      e.preventDefault();
+      resolve(document.getElementById('get-pin-number-input').value)
+      document.getElementById('get-pin-number-form').removeEventListener('submit', handler)
+    }
+    document.getElementById('get-pin-number-form')
+      .addEventListener('submit', handler)
 
-window.Main = Main
-Main.main(context)()
+  })
+  , uiSetPhoneNumberSubmissionResult: ({tag, values}) => () => {
+    console.log('uiSetPhoneNumberSubmissionResult', { tag, values })
+    switch (tag) {
+      case 'NothingYet':
+        break;
+      case 'Loading':
+        document.getElementById('get-mobile-number-status').innerHTML = 'Loading ...'
+        break;
+      case 'Failure':
+        document.getElementById('get-mobile-number-status').innerHTML = values[0]
+        break;
+      case 'Success':
+        document.getElementById('get-mobile-number-status').innerHTML = ''
+        console.log('uiSetPhoneNumberSubmissionResult Success', values[0])
+      default:
+        break;
+    }
+  }
+
+})()
