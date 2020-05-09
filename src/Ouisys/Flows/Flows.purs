@@ -29,4 +29,15 @@ getPhoneNumberFlow = do
       setPhoneNumberSubmissionStatus $ Failure error
       getPhoneNumberFlow
     handle phone (Right _) = pure phone
+
+
+getPinNumberFlow :: FlowCommands PinNumber
+getPinNumberFlow = do 
+  pin <- getPinNumber
+  handle pin =<< validatePinNumber pin
+  where 
+    handle _ (Left error) = do
+      setPinNumberSubmissionStatus $ Failure error
+      getPinNumberFlow
+    handle pin (Right _) = pure pin
       

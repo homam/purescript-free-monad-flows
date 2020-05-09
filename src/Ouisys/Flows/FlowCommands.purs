@@ -14,6 +14,7 @@ import Data.Generic.Rep.Show (genericShow)
 type Operator = String
 type PhoneNumber = String
 type PinNumber = String
+newtype PhoneNumberSubmissionResult = PhoneNumberSubmissionResult {}
 
 data RDS e r = NothingYet | Loading | Success r | Failure e
 derive instance genericRDS :: Generic (RDS e r) _
@@ -32,6 +33,9 @@ data FlowCommandsF a =
   | ValidatePhoneNumber PhoneNumber (Either String Unit -> a)
   | SubmitPhoneNumber PhoneNumber (Either String Unit -> a)
   | GetPinNumber (PinNumber -> a)
+  | SetPinNumberSubmissionStatus (RDS String PinNumber) a
+  | ValidatePinNumber PinNumber (Either String Unit -> a)
+  
 
 derive instance functorTeletypeF :: Functor FlowCommandsF
 
@@ -49,3 +53,12 @@ validatePhoneNumber phone = liftF $ ValidatePhoneNumber phone identity
 submitPhoneNumber :: PhoneNumber -> FlowCommands (Either String Unit)
 submitPhoneNumber phone = liftF $ SubmitPhoneNumber phone identity
 
+
+getPinNumber :: FlowCommands PinNumber
+getPinNumber = liftF $ GetPinNumber identity
+
+setPinNumberSubmissionStatus :: RDS String PinNumber -> Free FlowCommandsF Unit
+setPinNumberSubmissionStatus e = liftF $ SetPinNumberSubmissionStatus e unit
+
+validatePinNumber :: PinNumber -> FlowCommands (Either String Unit)
+validatePinNumber pin = liftF $ ValidatePinNumber pin identity

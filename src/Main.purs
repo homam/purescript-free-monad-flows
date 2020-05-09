@@ -22,7 +22,12 @@ flowCommandsN :: Config -> FlowCommandsF ~> Aff
 flowCommandsN {uiGetPhoneNumber} (GetPhoneNumber k) = k <$> (Promise.toAff =<< liftEffect uiGetPhoneNumber)
 flowCommandsN {uiGetPinNumber} (GetPinNumber k) = k <$> (Promise.toAff =<< liftEffect uiGetPinNumber)
 flowCommandsN {uiSetPhoneNumberSubmissionResult} (SetPhoneNumberSubmissionStatus v k) = do
-  liftEffect $ uiSetPhoneNumberSubmissionResult $ handle v -- either (\l -> {error: l, success: false}) (const {error: "", success: true}) v
+  liftEffect $ uiSetPhoneNumberSubmissionResult $ handle v
+  pure k
+  where
+    handle rds =  (encodeJson rds)
+flowCommandsN {uiSetPinNumberSubmissionResult} (SetPinNumberSubmissionStatus v k) = do
+  liftEffect $ uiSetPinNumberSubmissionResult $ handle v
   pure k
   where
     handle rds =  (encodeJson rds)
@@ -38,6 +43,11 @@ flowCommandsN _ (SubmitPhoneNumber v k) = k <$> do
     pure $ Left $ "Server Error: " <> v <> " must start with 0."
   else
     pure $ Right unit
+flowCommandsN _ (ValidatePinNumber v k) = k <$> do
+  if String.length v < 4 then
+    pure $ Left "Pin number must be greater than four digits."
+  else
+    pure $ Right unit
 
 
 run :: Config -> FlowCommands ~> Aff
@@ -48,11 +58,14 @@ type Config = {
     uiGetPhoneNumber :: Effect (Promise.Promise String)
   , uiSetPhoneNumberSubmissionResult :: Json -> Effect Unit
   , uiGetPinNumber :: Effect (Promise.Promise String)
+  , uiSetPinNumberSubmissionResult :: Json -> Effect Unit
 }
 
 
 
 main :: Config -> Effect Unit
 main config = launchAff_ $ do
-  void $ run config Flows.submitPhoneNumberFlow
+  void $ run config $ do 
+    void $ Flows.submitPhoneNumberFlow
+    Flows.getPinNumberFlow
   -- liftEffect $ log a

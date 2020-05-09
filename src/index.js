@@ -43,5 +43,23 @@ Main.main({
         break;
     }
   }
+  , uiSetPinNumberSubmissionResult: ({ tag, values }) => () => {
+    console.log('uiSetPinNumberSubmissionResult', { tag, values })
+    switch (tag) {
+      case 'NothingYet':
+        break;
+      case 'Loading':
+        document.getElementById('get-pin-number-status').innerHTML = 'Loading ...'
+        break;
+      case 'Failure':
+        document.getElementById('get-pin-number-status').innerHTML = values[0]
+        break;
+      case 'Success':
+        document.getElementById('get-pin-number-status').innerHTML = ''
+        console.log('uiSetPinNumberSubmissionResult Success', values[0])
+      default:
+        break;
+    }
+  }
 
 })()
