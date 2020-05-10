@@ -4,23 +4,25 @@ module Ouisys.Flows.Language (
 
 import Control.Monad.Free (Free, liftF)
 import Data.Either (Either)
-import Ouisys.Types (CheckSubscriptionToken, PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult, SubscriptionStatusResult, GetPinNumberResult)
-import Prelude (class Functor, Unit, identity, unit, ($))
+import Ouisys.Types (CheckSubscriptionToken, GetPinNumberResult, PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult, SubscriptionStatusResult, ClickToSMSDetails)
 import Ouisys.Types.RDS (RDS)
+import Prelude (class Functor, Unit, identity, unit, ($))
 
-data FlowCommandsF a = 
-    -- IdentifyOperatorByIP (Maybe Operator) a 
-  -- | AskOperatorFromUser (Operator -> a)
-    GetPhoneNumber (PhoneNumber -> a)
-  | SetPhoneNumberSubmissionStatus (RDS String PhoneNumber) a
-  | ValidatePhoneNumber PhoneNumber (Either String Unit -> a)
-  | SubmitPhoneNumber PhoneNumber (Either String PhoneNumberSubmissionResult -> a)
-  | GetPinNumber PhoneNumberSubmissionResult (GetPinNumberResult -> a)
-  | SetPinNumberSubmissionStatus (RDS String PinNumber) a
-  | ValidatePinNumber PinNumber (Either String Unit -> a)
-  | SubmitPinNumber PhoneNumberSubmissionResult PinNumber (Either String PinNumberSubmissionResult -> a)
-  | CheckSubscriptionStatus CheckSubscriptionToken (Either String SubscriptionStatusResult -> a)
-  | SetSubscriptionStatus SubscriptionStatusResult a
+data FlowCommandsF next = 
+    -- IdentifyOperatorByIP (Maybe Operator) next 
+  -- | AskOperatorFromUser (Operator -> next)
+    GetPhoneNumber (PhoneNumber -> next)
+  | SetPhoneNumberSubmissionStatus (RDS String PhoneNumber) next
+  | ValidatePhoneNumber PhoneNumber (Either String Unit -> next)
+  | SubmitPhoneNumber PhoneNumber (Either String PhoneNumberSubmissionResult -> next)
+  | GetPinNumber PhoneNumberSubmissionResult (GetPinNumberResult -> next)
+  | SetPinNumberSubmissionStatus (RDS String PinNumber) next
+  | ValidatePinNumber PinNumber (Either String Unit -> next)
+  | SubmitPinNumber PhoneNumberSubmissionResult PinNumber (Either String PinNumberSubmissionResult -> next)
+  | CheckSubscriptionStatus CheckSubscriptionToken (Either String SubscriptionStatusResult -> next)
+  | SetSubscriptionStatus SubscriptionStatusResult next
+  | GetClickToSMSDetails (Either String ClickToSMSDetails -> next)
+  | ClickToSMS ClickToSMSDetails next
 
 derive instance functorTeletypeF :: Functor FlowCommandsF
 
@@ -56,3 +58,9 @@ checkSubscriptionStatus token = liftF $ CheckSubscriptionStatus token identity
 
 setSubscriptionStatus :: SubscriptionStatusResult -> Free FlowCommandsF Unit
 setSubscriptionStatus e = liftF $ SetSubscriptionStatus e unit
+
+getClickToSMSDetails :: FlowCommands (Either String ClickToSMSDetails)
+getClickToSMSDetails = liftF $ GetClickToSMSDetails identity
+
+clickToSMS :: ClickToSMSDetails  -> Free FlowCommandsF Unit
+clickToSMS e = liftF $ ClickToSMS e unit

@@ -21,4 +21,6 @@ type PinNumber = String
 
 type GetPinNumberResult = Either Unit PinNumber
 
+type ClickToSMSDetails = {keyword:: String, shortcode :: String}
+
 
