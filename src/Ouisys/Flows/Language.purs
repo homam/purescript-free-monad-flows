@@ -1,25 +1,12 @@
-module Ouisys.Flows.Language where
+module Ouisys.Flows.Language (
+  module Ouisys.Flows.Language
+) where
 
-import Prelude (class Functor, class Show, Unit, identity, unit, ($))
 import Control.Monad.Free (Free, liftF)
-import Data.Argonaut.Decode (class DecodeJson)
-import Data.Argonaut.Decode.Generic.Rep (genericDecodeJson)
-import Data.Argonaut.Encode (class EncodeJson)
-import Data.Argonaut.Encode.Generic.Rep (genericEncodeJson)
 import Data.Either (Either)
-import Data.Generic.Rep (class Generic)
-import Data.Generic.Rep.Show (genericShow)
-import Ouisys.Types (CheckSubscriptionToken, PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult, SubscriptionStatusResult)
-
-
-data RDS e r = NothingYet | Loading | Success r | Failure e
-derive instance genericRDS :: Generic (RDS e r) _
-instance showRDS :: (Show e, Show r) => Show (RDS e r) where
-  show a = genericShow a
-instance encodeJsonRDS :: (EncodeJson e, EncodeJson r) => EncodeJson (RDS e r) where
-  encodeJson a = genericEncodeJson a
-instance decodeJsonRDS :: (DecodeJson e, DecodeJson r) => DecodeJson (RDS e r) where
-  decodeJson a = genericDecodeJson a
+import Ouisys.Types (CheckSubscriptionToken, PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult, SubscriptionStatusResult, GetPinNumberResult)
+import Prelude (class Functor, Unit, identity, unit, ($))
+import Ouisys.Types.RDS (RDS)
 
 data FlowCommandsF a = 
     -- IdentifyOperatorByIP (Maybe Operator) a 
@@ -28,7 +15,7 @@ data FlowCommandsF a =
   | SetPhoneNumberSubmissionStatus (RDS String PhoneNumber) a
   | ValidatePhoneNumber PhoneNumber (Either String Unit -> a)
   | SubmitPhoneNumber PhoneNumber (Either String PhoneNumberSubmissionResult -> a)
-  | GetPinNumber (PinNumber -> a)
+  | GetPinNumber PhoneNumberSubmissionResult (GetPinNumberResult -> a)
   | SetPinNumberSubmissionStatus (RDS String PinNumber) a
   | ValidatePinNumber PinNumber (Either String Unit -> a)
   | SubmitPinNumber PhoneNumberSubmissionResult PinNumber (Either String PinNumberSubmissionResult -> a)
@@ -52,8 +39,8 @@ submitPhoneNumber :: PhoneNumber -> FlowCommands (Either String PhoneNumberSubmi
 submitPhoneNumber phone = liftF $ SubmitPhoneNumber phone identity
 
 
-getPinNumber :: FlowCommands PinNumber
-getPinNumber = liftF $ GetPinNumber identity
+getPinNumber :: PhoneNumberSubmissionResult -> FlowCommands GetPinNumberResult
+getPinNumber sub = liftF $ GetPinNumber sub identity
 
 setPinNumberSubmissionStatus :: RDS String PinNumber -> Free FlowCommandsF Unit
 setPinNumberSubmissionStatus e = liftF $ SetPinNumberSubmissionStatus e unit
@@ -62,7 +49,7 @@ validatePinNumber :: PinNumber -> FlowCommands (Either String Unit)
 validatePinNumber pin = liftF $ ValidatePinNumber pin identity
 
 submitPinNumber :: PhoneNumberSubmissionResult -> PinNumber -> FlowCommands (Either String PinNumberSubmissionResult)
-submitPinNumber sub phone = liftF $ SubmitPinNumber sub phone identity
+submitPinNumber sub pin = liftF $ SubmitPinNumber sub pin identity
 
 checkSubscriptionStatus :: CheckSubscriptionToken -> FlowCommands (Either String SubscriptionStatusResult)
 checkSubscriptionStatus token = liftF $ CheckSubscriptionStatus token identity

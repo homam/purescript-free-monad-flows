@@ -1,4 +1,7 @@
-module Ouisys.Types where
+module Ouisys.Types (
+  module Ouisys.Types
+, module RDS
+) where
 
 import Prelude
 
@@ -6,16 +9,27 @@ import Data.Argonaut.Decode (class DecodeJson)
 import Data.Argonaut.Decode.Generic.Rep (genericDecodeJson)
 import Data.Argonaut.Encode (class EncodeJson)
 import Data.Argonaut.Encode.Generic.Rep (genericEncodeJson)
+import Data.Either (Either)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
+import Ouisys.Types.RDS (RDS(..)) as RDS
 
 type Operator = String
 type PhoneNumber = String
 type PinNumber = String
+
+type GetPinNumberResult = Either Unit PinNumber
+
 newtype PhoneNumberSubmissionResult = PhoneNumberSubmissionResult {}
 newtype PinNumberSubmissionResult = PinNumberSubmissionResult {}
 newtype CheckSubscriptionToken = CheckSubscriptionToken {}
-data SubscriptionStatusResult = SubscriptionStatusResult {}
+newtype SubscriptionStatusResult = SubscriptionStatusResult {}
+
+class ToSubscriptionStatusResult a where
+  toSubscriptionStatusResult :: a -> SubscriptionStatusResult
+
+instance pinNumberSubmissionResultToSubscriptionStatusResult :: ToSubscriptionStatusResult PinNumberSubmissionResult where
+  toSubscriptionStatusResult _ = SubscriptionStatusResult {}
 
 derive instance genericSubscriptionStatusResult :: Generic SubscriptionStatusResult _
 instance showSubscriptionStatusResult :: (Show e, Show r) => Show SubscriptionStatusResult where

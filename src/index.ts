@@ -32,6 +32,7 @@ function setContent(id: string, content: string) {
 
 Main.main({
   getPhoneNumber: () => new Promise(resolve => {
+    hide('get-pin-number')
     show('get-mobile-number')
     const handler = (e: Event) => {
       e.preventDefault();
@@ -41,7 +42,7 @@ Main.main({
     addEventListener('get-mobile-number-form', 'submit', handler)
 
   })
-  , getPinNumber: () => new Promise(resolve => {
+  , getPinNumber: () => new Promise((resolve, reject) => {
     hide('get-mobile-number')
     show('get-pin-number')
     const handler = (e: Event) => {
@@ -50,6 +51,12 @@ Main.main({
       removeEventListener('get-pin-number-form', 'submit', handler)
     }
     addEventListener('get-pin-number-form', 'submit', handler)
+
+    const change_handler = (e: Event) => {
+      reject()
+      removeEventListener('get-pin-change-number', 'click', change_handler)
+    }
+    addEventListener('get-pin-change-number', 'click', change_handler)
 
   })
   , setPhoneNumberSubmissionResult: (rds : RDS<string[], string[]>) => () => {

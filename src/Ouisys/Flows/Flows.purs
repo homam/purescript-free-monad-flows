@@ -1,9 +1,9 @@
 module Ouisys.Flows where
 
-import Ouisys.Flows.Language
-import Prelude (bind, discard, pure, ($), (=<<))
-import Data.Either (Either(..))
-import Ouisys.Types (PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult)
+import Ouisys.Flows.Language (FlowCommands, getPhoneNumber, getPinNumber, setPhoneNumberSubmissionStatus, setPinNumberSubmissionStatus, submitPhoneNumber, submitPinNumber, validatePhoneNumber, validatePinNumber)
+import Data.Either (Either(..), either)
+import Ouisys.Types (PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult, RDS(..))
+import Prelude (bind, const, discard, pure, ($), (=<<), (>>=)) 
 
 -- | Get a phone number and validate it using client-side validation rules
 getPhoneNumberFlow :: FlowCommands PhoneNumber
@@ -33,20 +33,23 @@ submitPhoneNumberFlow = do
 ---
 
 
-getPinNumberFlow :: FlowCommands PinNumber
-getPinNumberFlow = do 
-  pin <- getPinNumber
+getPinNumberFlow :: PhoneNumberSubmissionResult -> FlowCommands PinNumber
+getPinNumberFlow sub = do 
+  pin <- handleGetPin =<< getPinNumber sub
   handle pin =<< validatePinNumber pin
   where 
+    handleGetPin = either
+      (const $ submitPhoneNumberFlow >>= getPinNumberFlow)
+      pure 
     handle _ (Left error) = do
       setPinNumberSubmissionStatus $ Failure error
-      getPinNumberFlow
+      getPinNumberFlow sub
     handle pin (Right _) = pure pin
       
 submitPinNumberFlow :: PhoneNumberSubmissionResult -> FlowCommands PinNumberSubmissionResult
 submitPinNumberFlow sub = do 
-  pin <- getPinNumberFlow
-  setPinNumberSubmissionStatus $ Loading
+  pin <- getPinNumberFlow sub
+  setPinNumberSubmissionStatus Loading
   handle pin =<< submitPinNumber sub pin
   where 
     handle _ (Left l) = do
