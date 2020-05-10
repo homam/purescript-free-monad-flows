@@ -1,7 +1,5 @@
 module Main (main) where
 
-import Ouisys.Flows.Language (FlowCommands, FlowCommandsF(..))
-import Prelude (type (~>), Unit, bind, discard, pure, unit, void, ($), (/=), (<), (<$>), (<<<), (=<<))
 import Control.Monad.Free (foldFree)
 import Control.Promise as Promise
 import Data.Argonaut.Core (Json)
@@ -11,8 +9,11 @@ import Data.String as String
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
-import Ouisys.Flows as Flows
 import Ouisys.Backend.MockApi (mockApi, Api)
+import Ouisys.Flows as Flows
+import Ouisys.Flows.Language (FlowCommands, FlowCommandsF(..), setSubscriptionStatus)
+import Ouisys.Types -- (SubscriptionStatusResult(..))
+import Prelude (type (~>), Unit, bind, discard, pure, unit, void, ($), (/=), (<), (<$>), (<<<), (=<<))
 
 
 
@@ -37,6 +38,10 @@ flowCommandsN _ (ValidatePinNumber pin k) = k <$> do
   else
     pure $ Right unit
 flowCommandsN {api} (SubmitPinNumber sub pin k) = k <$> (api.submitPinNumber {phoneNumberSubmissionResult: sub, pin})
+flowCommandsN {api} (CheckSubscriptionStatus token k) = k <$> (pure $ Left "Not implemented")
+flowCommandsN {ui} (SetSubscriptionStatus (SubscriptionStatusResult v) k) = do 
+  liftEffect $ ui.setSubscriptionStatus $ encodeJson v
+  pure k
 
 run :: Config -> FlowCommands ~> Aff
 run = foldFree <<< flowCommandsN
@@ -51,6 +56,7 @@ type UIConfig = {
   , setPhoneNumberSubmissionResult :: Json -> Effect Unit
   , getPinNumber :: Effect (Promise.Promise String)
   , setPinNumberSubmissionResult :: Json -> Effect Unit
+  , setSubscriptionStatus :: Json -> Effect Unit
 }
 
 
@@ -63,5 +69,6 @@ main uiConfig = launchAff_ $ do
   }
   void $ run config $ do 
     phoneNumberSubmission <- Flows.submitPhoneNumberFlow
-    Flows.submitPinNumberFlow phoneNumberSubmission
+    void $ Flows.submitPinNumberFlow phoneNumberSubmission
+    setSubscriptionStatus $ SubscriptionStatusResult {}
   -- liftEffect $ log a

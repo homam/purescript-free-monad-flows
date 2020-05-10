@@ -1,7 +1,6 @@
 module Ouisys.Flows.Language where
 
-import Prelude
-
+import Prelude (class Functor, class Show, Unit, identity, unit, ($))
 import Control.Monad.Free (Free, liftF)
 import Data.Argonaut.Decode (class DecodeJson)
 import Data.Argonaut.Decode.Generic.Rep (genericDecodeJson)
@@ -10,7 +9,7 @@ import Data.Argonaut.Encode.Generic.Rep (genericEncodeJson)
 import Data.Either (Either)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Ouisys.Types (PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult)
+import Ouisys.Types (CheckSubscriptionToken, PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult, SubscriptionStatusResult)
 
 
 data RDS e r = NothingYet | Loading | Success r | Failure e
@@ -33,6 +32,8 @@ data FlowCommandsF a =
   | SetPinNumberSubmissionStatus (RDS String PinNumber) a
   | ValidatePinNumber PinNumber (Either String Unit -> a)
   | SubmitPinNumber PhoneNumberSubmissionResult PinNumber (Either String PinNumberSubmissionResult -> a)
+  | CheckSubscriptionStatus CheckSubscriptionToken (Either String SubscriptionStatusResult -> a)
+  | SetSubscriptionStatus SubscriptionStatusResult a
 
 derive instance functorTeletypeF :: Functor FlowCommandsF
 
@@ -62,3 +63,9 @@ validatePinNumber pin = liftF $ ValidatePinNumber pin identity
 
 submitPinNumber :: PhoneNumberSubmissionResult -> PinNumber -> FlowCommands (Either String PinNumberSubmissionResult)
 submitPinNumber sub phone = liftF $ SubmitPinNumber sub phone identity
+
+checkSubscriptionStatus :: CheckSubscriptionToken -> FlowCommands (Either String SubscriptionStatusResult)
+checkSubscriptionStatus token = liftF $ CheckSubscriptionStatus token identity
+
+setSubscriptionStatus :: SubscriptionStatusResult -> Free FlowCommandsF Unit
+setSubscriptionStatus e = liftF $ SetSubscriptionStatus e unit

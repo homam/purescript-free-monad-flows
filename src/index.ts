@@ -86,6 +86,11 @@ Main.main({
         break;
     }
   }
+  , setSubscriptionStatus: (status: any) => () => {
+    console.log('setSubscriptionStatus', status)
+    hide('get-pin-number')
+    show('tq')
+  }
 
 })()
 
