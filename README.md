@@ -1,36 +1,39 @@
-# PureScript Free Turtle interpreter
+# PureScript Free Monad Demo
 
-A demonstration of a Turtle interpreter based on the Free monad, with HTML Canvas graphics support.
-
-![Stars][stars]
+Example of a simple PIN flow:
 
 ```purescript
-main :: Canvas.Context2D ->  Effect Unit
-main ctx = do
-  void $ renderTurtleProgOnCanvas ctx star
-
-star :: Free T.TurtleCommand Unit
-star = do
-  forward 50.0
-  left 90.0
-  forward 15.0
-  left $ negate 90.0
-  penDown
-  right 144.0
-  forward 100.0
-  right 144.0
-  forward 100.0
-  right 144.0
-  forward 100.0
-  right 144.0
-  forward 100.0
-  right 144.0
-  forward 100.0
-  penUp
-  left $ 90.0
-  forward $ negate 15.0
-  left $ negate 90.0
-  forward $ negate 50.0
+demoPinFlow :: Free FlowCommandsF Unit
+demoPinFlow = do 
+  phoneNumberSubmission <- Flows.submitPhoneNumberFlow
+  pinNumberSubmissionResult <- Flows.submitPinNumberFlow phoneNumberSubmission
+  setSubscriptionStatus $ toSubscriptionStatusResult pinNumberSubmissionResult
 ```
 
-[stars]: https://i.imgur.com/N6FZnni.png
+## Setup
+
+1. Make sure you have a recent node installation
+```bash
+nvm use v12.16.1
+```
+2. Install [PureScript](https://www.purescript.org/)
+```bash
+npm install -g purescript
+npm install -g spago
+```
+3. Clone this repo and run 
+```
+spago install
+yarn
+yarn start:dev
+```
+
+Open the program in your browser [localhost:8080](http://localhost:8080/)
+
+
+## Project Structure
+Everything is in `src` directory.
+
+Start from `index.ts`.
+
+`index.ts` imports `Main.purs` and handle the control flow to PureScript's `main` function.

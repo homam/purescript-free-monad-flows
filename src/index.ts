@@ -52,8 +52,8 @@ Main.main({
     }
     addEventListener('get-pin-number-form', 'submit', handler)
 
-    const change_handler = (e: Event) => {
-      reject()
+    const change_handler = (_e: Event) => {
+      reject() // call reject() to go back to getPhoneNumber()
       removeEventListener('get-pin-change-number', 'click', change_handler)
     }
     addEventListener('get-pin-change-number', 'click', change_handler)
