@@ -1,8 +1,9 @@
 module Ouisys.Flows where
 
-import Ouisys.Flows.FlowCommands
-import Prelude (Unit, bind, discard, pure, ($), (=<<))
+import Ouisys.Flows.Language
+import Prelude (bind, discard, pure, ($), (=<<))
 import Data.Either (Either(..))
+import Ouisys.Types (PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult)
 
 -- | Get a phone number and validate it using client-side validation rules
 getPhoneNumberFlow :: FlowCommands PhoneNumber
@@ -42,7 +43,7 @@ getPinNumberFlow = do
       getPinNumberFlow
     handle pin (Right _) = pure pin
       
-submitPinNumberFlow :: PhoneNumberSubmissionResult -> FlowCommands Unit
+submitPinNumberFlow :: PhoneNumberSubmissionResult -> FlowCommands PinNumberSubmissionResult
 submitPinNumberFlow sub = do 
   pin <- getPinNumberFlow
   setPinNumberSubmissionStatus $ Loading

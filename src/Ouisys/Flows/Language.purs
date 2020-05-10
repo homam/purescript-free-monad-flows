@@ -1,4 +1,4 @@
-module Ouisys.Flows.FlowCommands where
+module Ouisys.Flows.Language where
 
 import Prelude
 
@@ -10,11 +10,8 @@ import Data.Argonaut.Encode.Generic.Rep (genericEncodeJson)
 import Data.Either (Either)
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
+import Ouisys.Types (PhoneNumber, PhoneNumberSubmissionResult, PinNumber, PinNumberSubmissionResult)
 
-type Operator = String
-type PhoneNumber = String
-type PinNumber = String
-newtype PhoneNumberSubmissionResult = PhoneNumberSubmissionResult {}
 
 data RDS e r = NothingYet | Loading | Success r | Failure e
 derive instance genericRDS :: Generic (RDS e r) _
@@ -35,7 +32,7 @@ data FlowCommandsF a =
   | GetPinNumber (PinNumber -> a)
   | SetPinNumberSubmissionStatus (RDS String PinNumber) a
   | ValidatePinNumber PinNumber (Either String Unit -> a)
-  | SubmitPinNumber PhoneNumberSubmissionResult PinNumber (Either String Unit -> a)
+  | SubmitPinNumber PhoneNumberSubmissionResult PinNumber (Either String PinNumberSubmissionResult -> a)
 
 derive instance functorTeletypeF :: Functor FlowCommandsF
 
@@ -63,5 +60,5 @@ setPinNumberSubmissionStatus e = liftF $ SetPinNumberSubmissionStatus e unit
 validatePinNumber :: PinNumber -> FlowCommands (Either String Unit)
 validatePinNumber pin = liftF $ ValidatePinNumber pin identity
 
-submitPinNumber :: PhoneNumberSubmissionResult -> PinNumber -> FlowCommands (Either String Unit)
+submitPinNumber :: PhoneNumberSubmissionResult -> PinNumber -> FlowCommands (Either String PinNumberSubmissionResult)
 submitPinNumber sub phone = liftF $ SubmitPinNumber sub phone identity

@@ -31,7 +31,7 @@ function setContent(id: string, content: string) {
 }
 
 Main.main({
-  uiGetPhoneNumber: () => new Promise(resolve => {
+  getPhoneNumber: () => new Promise(resolve => {
     show('get-mobile-number')
     const handler = (e: Event) => {
       e.preventDefault();
@@ -41,7 +41,7 @@ Main.main({
     addEventListener('get-mobile-number-form', 'submit', handler)
 
   })
-  , uiGetPinNumber: () => new Promise(resolve => {
+  , getPinNumber: () => new Promise(resolve => {
     hide('get-mobile-number')
     show('get-pin-number')
     const handler = (e: Event) => {
@@ -52,8 +52,8 @@ Main.main({
     addEventListener('get-pin-number-form', 'submit', handler)
 
   })
-  , uiSetPhoneNumberSubmissionResult: (rds : RDS<string[], string[]>) => () => {
-    console.log('uiSetPhoneNumberSubmissionResult', rds)
+  , setPhoneNumberSubmissionResult: (rds : RDS<string[], string[]>) => () => {
+    console.log('setPhoneNumberSubmissionResult', rds)
     switch (rds.tag) {
       case 'NothingYet':
         break;
@@ -69,8 +69,8 @@ Main.main({
         break;
     }
   }
-  , uiSetPinNumberSubmissionResult: (rds : RDS<string[], string[]>) => () => {
-    console.log('uiSetPinNumberSubmissionResult', rds)
+  , setPinNumberSubmissionResult: (rds : RDS<string[], string[]>) => () => {
+    console.log('setPinNumberSubmissionResult', rds)
     switch (rds.tag) {
       case 'NothingYet':
         break;
